@@ -24,10 +24,10 @@ ns=""
 if [ "$existing_namespace" = "" ]
 then
     ns=$namespace
-    echo "$ns" | sudo sh cluster/etcd/namespace/create-namespace.sh
+    echo "$ns" | sudo sh master-node/etcd/namespace/create-namespace.sh
 else
     ns=$existing_namespace
 fi
 
 
-echo "$ns:$container_id" | sudo sh cluster/etcd/set-machine.sh
+echo "$ns:$container_id" | sudo sh master-node/etcd/set-machine.sh
