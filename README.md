@@ -1,9 +1,10 @@
-containers manager
+# Docker containers manager
 
-OS: 
+## OS 
+
 any linux distro
 
-dependencies:
+## Software dependencies
 
 - docker engine
 - go
