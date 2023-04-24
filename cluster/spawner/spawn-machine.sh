@@ -2,9 +2,9 @@
 
 read -r namespace
 
-if [ $namespace = "" ]
+if [ "$namespace" = "" ]
 then
-    $namespace=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')
+    namespace=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')
 fi
 
 name="$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')"
