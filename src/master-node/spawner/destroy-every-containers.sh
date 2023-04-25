@@ -1,7 +1,7 @@
 #!/bin/bash
 
-docker stop $(docker ps -a --format "{{.ID}}")
+docker stop $(docker ps --filter status=running -q)
 
 sqlite3 db "delete from cluster;delete from machine;"
 
-docker kill $(ps | grep 'docker')
+docker rm $(docker ps --filter status=exited -q)
