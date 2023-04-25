@@ -1,10 +1,10 @@
 #!/bin/bash
 
-read -r namespace
+read -r cluster
 
-if [ "$namespace" = "" ]
+if [ "$cluster" = "" ]
 then
-    namespace=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')
+    cluster=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')
 fi
 
 name="$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')"
@@ -15,19 +15,19 @@ container_id=$(docker run --expose 3000 -td --name $name alpine:3.14)
 
 echo "machine $container_id running on port 3000\n"
 
-existing_namespace=$(sqlite3 db "select name from namespace where name =\"$namespace\"")
+existing_cluster=$(sqlite3 db "select name from cluster where name =\"$cluster\"")
 
-echo $existing_namespace
+echo $existing_cluster
 
-ns=""
+cl=""
 
-if [ "$existing_namespace" = "" ]
+if [ "$existing_cluster" = "" ]
 then
-    ns=$namespace
-    echo "$ns" | sudo sh master-node/etcd/namespace/create-namespace.sh
+    cl=$cluster
+    echo "$cl" | sudo sh master-node/etcd/cluster/create-cluster.sh
 else
-    ns=$existing_namespace
+    cl=$existing_cluster
 fi
 
 
-echo "$ns:$container_id" | sudo sh master-node/etcd/set-machine.sh
+echo "$cl:$container_id" | sudo sh master-node/etcd/create-machine.sh
