@@ -1,5 +1,5 @@
 PRAGMA foreign_keys=ON;
 BEGIN TRANSACTION;
-CREATE TABLE cluster(id integer primary key, name VARCHAR(100), status tinyint(1), cluster_id int);
+CREATE TABLE cluster(id integer primary key, name VARCHAR(100), network VARCHAR(200), status tinyint(1));
 CREATE TABLE machine (id VARCHAR(300), ip int, cluster_id int, status tinyint, FOREIGN KEY (cluster_id) REFERENCES cluster(id));
 COMMIT;
