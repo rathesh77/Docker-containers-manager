@@ -1,6 +1,6 @@
 #!/bin/bash
 
-read -r line
+line=$1
 
 sqlite3 db "select from machine where id = $line;"
 

@@ -27,3 +27,10 @@ go.work
 # End of https://www.toptal.com/developers/gitignore/api/go
 
 db
+
+data
+config
+generated
+cache
+blobs
+metadata

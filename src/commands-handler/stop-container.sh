@@ -13,5 +13,4 @@ then
     exit -1
 fi
 
-echo "starting machine..."
-sudo bash ./master-node/spawner/spawn-machine.sh $1
+sudo sh ./master-node/spawner/stop-machine.sh $1
