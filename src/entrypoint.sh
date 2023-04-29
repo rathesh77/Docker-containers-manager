@@ -29,15 +29,6 @@ echo "command:$command"
 echo "args:$args"
 if [ "$args" != "$command" ]
 then
-    case $command in
-
-        "start-container")
-            sudo sh ./commands-handler/start-container.sh $args
-        ;;
-
-        "stop-container")
-            sudo sh ./commands-handler/stop-container.sh $args
-        ;;
-
-    esac
+echo "toto"
+    curl -v --location "http://192.168.0.32:3000/contract" --form "contract=\"$command $args\""
 fi

@@ -36,7 +36,7 @@ func main() {
 }
 
 func contract(w http.ResponseWriter, r *http.Request) {
-	fmt.Print("kubelet requested")
+	fmt.Println("kubelet requested")
 
 	body, err := ioutil.ReadAll(r.Body)
 	defer r.Body.Close()
@@ -55,13 +55,14 @@ func contract(w http.ResponseWriter, r *http.Request) {
 	}
 	command := line.Contract
 	containerName := strings.Split(line.Args, " ")[0]
+	containerID := strings.Split(line.Args, " ")[0]
 
 	fmt.Println("command:" + command)
 	//args := split[1:]
 	switch command {
 	case "start-container":
 
-		cmd := exec.Command("../controllers/spawn-machine.sh", containerName)
+		cmd := exec.Command("../controllers/spawn-machine.sh", containerName, containerID)
 		//cmd.Dir = dir
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
@@ -75,7 +76,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		}
 		fmt.Println("kubectl DONE")
 		w.WriteHeader(200)
-		io.WriteString(w, string(out))
+		io.WriteString(w, strings.TrimSpace(string(out)))
 	default:
 		w.WriteHeader(401)
 		io.WriteString(w, "invalid command")

@@ -19,6 +19,8 @@ import (
 
 const file string = "../db"
 
+var db *sql.DB
+
 type node struct {
 	id         string
 	name       string
@@ -32,8 +34,14 @@ func main() {
 
 	http.HandleFunc("/root", reverseShell)
 	http.HandleFunc("/contract", contract)
+	var err error
+	db, err = sql.Open("sqlite3", file)
 
-	err := http.ListenAndServe(":3000", nil)
+	if err != nil {
+		log.Fatalln(err)
+		return
+	}
+	err = http.ListenAndServe(":3000", nil)
 
 	if errors.Is(err, http.ErrServerClosed) {
 		fmt.Println("server closed")
@@ -53,15 +61,6 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db, err := sql.Open("sqlite3", file)
-
-	if err != nil {
-		w.WriteHeader(401)
-		log.Fatalln(err)
-
-		io.WriteString(w, "error connecting to sqlite3 db")
-		return
-	}
 	rows, err := db.Query("SELECT id, name, cluster_id, network, mask from node limit 1")
 	if err != nil {
 		w.WriteHeader(401)
@@ -78,6 +77,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "error scanning node row")
 		return
 	}
+	rows.Close()
 
 	split := strings.Split(line, " ")
 	command := split[0]
@@ -108,16 +108,14 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		}
 		sb := string(body)
 		log.Print(sb)
-
-		db.Close()
-		cmd := exec.Command("sh", "./master-node/etcd/machine/create-machine.sh", node.id, containerName+"-id", containerName)
+		cmd := exec.Command("sh", "./master-node/etcd/machine/create-machine.sh", node.id, sb, containerName)
 		cmd.Dir = "../"
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 
 		out, err := cmd.Output()
 
-		if err != nil {
+		if err != nil && resp.StatusCode == 200 {
 			w.WriteHeader(500)
 			io.WriteString(w, stderr.String())
 			return
