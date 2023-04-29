@@ -20,6 +20,7 @@ import (
 const file string = "../db"
 
 type node struct {
+	id         string
 	name       string
 	cluster_id string
 	network    string
@@ -27,11 +28,10 @@ type node struct {
 }
 
 func main() {
-	fmt.Print("fddf")
+	fmt.Print("starting http server on port 3000")
 
 	http.HandleFunc("/root", reverseShell)
 	http.HandleFunc("/contract", contract)
-	fmt.Print("fddf")
 
 	err := http.ListenAndServe(":3000", nil)
 
@@ -45,7 +45,6 @@ func main() {
 }
 
 func contract(w http.ResponseWriter, r *http.Request) {
-	fmt.Print("fddf")
 
 	line := strings.Trim(r.PostFormValue("contract"), " ")
 	if line == "" {
@@ -55,7 +54,6 @@ func contract(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db, err := sql.Open("sqlite3", file)
-	fmt.Print("fddf")
 
 	if err != nil {
 		w.WriteHeader(401)
@@ -64,7 +62,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, "error connecting to sqlite3 db")
 		return
 	}
-	rows, err := db.Query("SELECT name, cluster_id, network, mask from node limit 1")
+	rows, err := db.Query("SELECT id, name, cluster_id, network, mask from node limit 1")
 	if err != nil {
 		w.WriteHeader(401)
 		io.WriteString(w, "error selecting node")
@@ -74,7 +72,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 
 	node := node{}
 	rows.Next()
-	err = rows.Scan(&node.name, &node.cluster_id, &node.network, &node.mask)
+	err = rows.Scan(&node.id, &node.name, &node.cluster_id, &node.network, &node.mask)
 	if err != nil {
 		w.WriteHeader(401)
 		io.WriteString(w, "error scanning node row")
@@ -87,6 +85,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 	switch command {
 	case "start-container":
 
+		containerName := split[1]
 		postBody, _ := json.Marshal(map[string]string{
 			"contract": "start-container",
 			"args":     args,
@@ -103,9 +102,30 @@ func contract(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil {
 			log.Fatalln(err)
+			w.WriteHeader(401)
+			io.WriteString(w, err.Error())
+			return
 		}
 		sb := string(body)
 		log.Print(sb)
+
+		db.Close()
+		cmd := exec.Command("sh", "./master-node/etcd/machine/create-machine.sh", node.id, containerName+"-id", containerName)
+		cmd.Dir = "../"
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+
+		out, err := cmd.Output()
+
+		if err != nil {
+			w.WriteHeader(500)
+			io.WriteString(w, stderr.String())
+			return
+		}
+
+		w.WriteHeader(200)
+		io.WriteString(w, sb+"\n"+string(out))
+		return
 	default:
 		w.WriteHeader(401)
 		io.WriteString(w, "invalid command")
