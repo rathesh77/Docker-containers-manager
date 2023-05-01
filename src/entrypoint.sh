@@ -14,7 +14,6 @@ line=""
 for word in "$@"; do line="$line $word"; done
 
 line=$(echo "$line" | xargs)
-echo "command: $line"
 
 if [ "$line" = "" ]
 then
@@ -29,6 +28,5 @@ echo "command:$command"
 echo "args:$args"
 if [ "$args" != "$command" ]
 then
-echo "toto"
     curl -v --location "http://192.168.0.32:3000/contract" --form "contract=\"$command $args\""
 fi
