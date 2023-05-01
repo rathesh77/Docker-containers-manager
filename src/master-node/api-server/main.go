@@ -110,7 +110,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		}
 		sb := string(body)
 		log.Print(sb)
-		cmd := exec.Command("sh", "./master-node/etcd/machine/create-machine.sh", node.id, sb, containerName)
+		cmd := exec.Command("sh", "./etcd/machine/create-machine.sh", node.id, sb, containerName)
 		cmd.Dir = "../"
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr

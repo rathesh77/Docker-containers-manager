@@ -14,23 +14,23 @@ fi
 
 if [ "$status" = "health_status" ]
 then
-    #sh ./master-node/watcher/restart-container.sh $id
+    sh ./watcher/restart-container.sh $id
     exit 1
 fi
 
 if [ "$status" = "die" ]
 then
-    #sh ./master-node/watcher/restart-container.sh $id
+    sh ./watcher/restart-container.sh $id
     exit 1
 fi
 
 if [ "$status" = "oom" ]
 then
-    #sh ./master-node/watcher/restart-container.sh $id
+    sh ./watcher/restart-container.sh $id
     exit 1
 fi
 if [ "$status" = "start" ]
 then
-    #sh ./master-node/watcher/restart-container.sh $id
+    sh ./watcher/restart-container.sh $id
     exit 1
 fi

@@ -1,5 +1,5 @@
 #!/bin/bash
-echo 'ping' | nc -q  1  localhost 2000
+echo 'ping' | nc -q  1  localhost 3000
 
 response="$?"
 
