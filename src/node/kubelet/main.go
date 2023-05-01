@@ -19,10 +19,7 @@ type Command struct {
 }
 
 func main() {
-	fmt.Print("fddf")
-
 	http.HandleFunc("/contract", contract)
-	fmt.Print("fddf")
 
 	err := http.ListenAndServe(":3001", nil)
 
@@ -69,7 +66,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 
 		out, err := cmd.Output()
 
-		if err != nil {
+		if err != nil || stderr.String() != "" {
 			w.WriteHeader(401)
 			io.WriteString(w, stderr.String())
 			return

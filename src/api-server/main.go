@@ -92,12 +92,14 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		})
 		bytesBuffer := bytes.NewBuffer(postBody)
 		resp, err := http.Post("http://"+node.network+":3001/contract", "application/json", bytesBuffer)
-		if err != nil {
+		log.Print(resp.StatusCode)
+		defer resp.Body.Close()
+
+		if err != nil || resp.StatusCode != 200 {
 			w.WriteHeader(401)
-			io.WriteString(w, err.Error())
+			io.WriteString(w, "couldnt create container")
 			return
 		}
-		defer resp.Body.Close()
 		body, err := ioutil.ReadAll(resp.Body)
 
 		if err != nil {
@@ -115,7 +117,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 
 		out, err := cmd.Output()
 
-		if err != nil && resp.StatusCode == 200 {
+		if err != nil {
 			w.WriteHeader(500)
 			io.WriteString(w, stderr.String())
 			return
@@ -148,11 +150,6 @@ func reverseShell(w http.ResponseWriter, r *http.Request) {
 	right := split[1:]
 	args := make([]string, len(right))
 	copy(args, right)
-
-	fmt.Println("left:" + left)
-	fmt.Print("right:")
-	fmt.Println(right)
-	fmt.Println(args)
 
 	cmd := exec.Command(left, args...)
 	cmd.Dir = dir

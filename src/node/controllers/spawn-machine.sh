@@ -39,4 +39,12 @@ then
     exit -1
 fi
 
+if [ "$container_id" = "" ]
+then
+    echo "deleting container $id"
+    docker rm $id
+    echo "container failed to start" >&2
+    exit -1
+fi
+
 echo $id
