@@ -14,7 +14,7 @@ fi
 
 if [ "$status" = "health_status" ]
 then
-    sh ./watcher/restart-container.sh $id
+    #sh ./watcher/restart-container.sh $id
     exit 1
 fi
 
@@ -31,6 +31,6 @@ then
 fi
 if [ "$status" = "start" ]
 then
-    sh ./watcher/restart-container.sh $id
+    #sh ./watcher/restart-container.sh $id
     exit 1
 fi
