@@ -9,9 +9,17 @@ else
     echo "cluster already created"
 fi
 
-#sudo sh ./master-node/watcher/start-watcher.sh &
 
 cd ./api-server
-go run .
+go run . &
+
+cd ..
+while :
+do
+    echo "WATCH !"
+    sudo bash ./controllers/watch-events.sh
+    echo "sleep for 10 seconds !"
+    sleep 10
+done
 
 

@@ -18,8 +18,13 @@ type Command struct {
 	Args     string `json: "args"`
 }
 
+type Machine struct {
+	Id string `json:"id"`
+}
+
 func main() {
 	http.HandleFunc("/contract", contract)
+	http.HandleFunc("/healthcheck", healthcheck)
 
 	err := http.ListenAndServe(":3001", nil)
 
@@ -29,6 +34,45 @@ func main() {
 		fmt.Printf("error starting server : %s\n", err)
 		os.Exit(-1)
 	}
+
+}
+
+func healthcheck(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("kubelet healthcheck requested")
+
+	body, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		w.WriteHeader(401)
+		io.WriteString(w, err.Error())
+		return
+	}
+	var line Machine
+
+	err = json.Unmarshal(body, &line)
+	if err != nil {
+		w.WriteHeader(401)
+		fmt.Println(err.Error())
+		io.WriteString(w, err.Error())
+		return
+	}
+	containerID := strings.TrimSpace(line.Id)
+
+	cmd := exec.Command("../controllers/healthcheck.sh", containerID)
+	var stderr bytes.Buffer
+	cmd.Stderr = &stderr
+
+	out, err := cmd.Output()
+
+	if err != nil || stderr.String() != "" {
+		w.WriteHeader(401)
+		io.WriteString(w, stderr.String())
+		return
+	}
+	w.WriteHeader(200)
+	w.Header().Set("Content-Type", "application/json")
+	jsonResponse := "{\"status\":\"" + strings.TrimSpace(string(out)) + "\"}"
+	w.Write([]byte(jsonResponse))
 
 }
 
