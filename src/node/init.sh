@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-sudo sh ./watcher/start-watcher.sh &
+#sudo sh ./watcher/start-watcher.sh &
 
 cd kubelet
 
