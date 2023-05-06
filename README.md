@@ -11,11 +11,12 @@ any linux distro
 - shell
 - sqlite3/redis
 - git
-
+- nmap
 
 
 ## TODO
 
 - Create pods (a unit containing one or more containers to be runned)
+- node scanning over the local network
 - Support yaml files for creating deployments
 - implement load balancing
