@@ -59,6 +59,7 @@ func healthcheck(w http.ResponseWriter, r *http.Request) {
 	}
 	containerDockerID := strings.TrimSpace(line.DockerId)
 
+	log.Println("DockerID healthcheck:" + containerDockerID)
 	cmd := exec.Command("../controllers/healthcheck.sh", containerDockerID)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -117,9 +118,12 @@ func contract(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		outToStr := string(out)
-		split := strings.Split(outToStr, ":")
-		containerDockerId := split[0]
-		podNetwork := strings.TrimSpace(split[1])
+		split := strings.Split(strings.TrimSpace(outToStr), ":")
+		containerDockerId := strings.Split(split[0], "\n")[1]
+		podNetwork := split[1]
+		log.Println("container docker id: " + containerDockerId)
+		log.Println("podNetwork: " + podNetwork)
+
 		fmt.Println("kubectl DONE")
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)

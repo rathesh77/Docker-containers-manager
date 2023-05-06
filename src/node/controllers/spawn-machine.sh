@@ -4,14 +4,12 @@ id="$1-$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')"
 
 #container_id=$(docker run -td --name $name alpine:3.14)
 
-name=$1
-
 pod_network="net-$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')"
 
 docker network create $pod_network
 
 container_id=$(docker run \
-    --network $pod_network \
+    --network "$pod_network" \
     -td \
     --log-driver \
     json-file \
@@ -54,4 +52,4 @@ then
     exit -1
 fi
 
-echo "$id:$pod_network"
+echo "$container_id:$pod_network"
