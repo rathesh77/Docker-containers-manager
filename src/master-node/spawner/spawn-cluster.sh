@@ -5,3 +5,4 @@
 
 
 sudo sh etcd/cluster/create-cluster.sh cluster1
+sudo bash ./controllers/discover-network.sh
