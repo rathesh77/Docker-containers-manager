@@ -19,4 +19,4 @@ cat scan.txt | grep 'for' | tr -d 'Nmap scan report for ' | while IFS= read -r a
     fi
 done
 
-#ping -b -c 1 $ip_broadcast
+rm scan.txt
