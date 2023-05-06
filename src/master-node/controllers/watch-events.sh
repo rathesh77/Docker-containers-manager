@@ -18,7 +18,7 @@ echo $nodes | while IFS= read -r node ; do
     then
 
         echo "node at $network is reachable"
-        pods=$(sqlite3 db "select id from pod where node_id=$id" | tr -d "\n[:blank:]")
+        pods=$(sqlite3 db "select id from pod where node_id=$id")
         if [ "$pods" != "" ]
         then 
             echo $pods | while IFS= read -r pod_id ; do 
