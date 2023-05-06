@@ -23,7 +23,6 @@ container_id=$(docker run \
     -v ./blobs:/blobs \
     -v ./generated:/generated \
     --name $id \
-    -p 9999:9999 \
     -e STASH_STASH=/data/ \
     -e STASH_GENERATED=/generated/ \
     -e STASH_METADATA=/metadata/ \
