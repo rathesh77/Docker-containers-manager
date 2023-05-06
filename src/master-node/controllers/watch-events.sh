@@ -29,9 +29,11 @@ echo $nodes | while IFS= read -r node ; do
                         IFS='|'
                         fields=($machine)
                         docker_id=${fields[1]}
-                        curl -v --location "http://${network}:3001/healthcheck" \
+                        echo "$docker_id: "
+                        curl --location "http://${network}:3001/healthcheck" \
                         -H 'Content-Type: application/json' \
                         -d  "{\"id\": \"$docker_id\"}"
+                        printf "\n\n"
                     done
                 fi
             done
