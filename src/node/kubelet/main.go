@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
 	"os"
 	"os/exec"
@@ -19,7 +20,7 @@ type Command struct {
 }
 
 type Machine struct {
-	Id string `json:"id"`
+	DockerId string `json:"id"`
 }
 
 func main() {
@@ -56,9 +57,9 @@ func healthcheck(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, err.Error())
 		return
 	}
-	containerID := strings.TrimSpace(line.Id)
+	containerDockerID := strings.TrimSpace(line.DockerId)
 
-	cmd := exec.Command("../controllers/healthcheck.sh", containerID)
+	cmd := exec.Command("../controllers/healthcheck.sh", containerDockerID)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
 
@@ -96,14 +97,13 @@ func contract(w http.ResponseWriter, r *http.Request) {
 	}
 	command := line.Contract
 	containerName := strings.Split(line.Args, " ")[0]
-	containerID := strings.Split(line.Args, " ")[0]
 
 	fmt.Println("command:" + command)
 	//args := split[1:]
 	switch command {
-	case "start-container":
+	case "init-deployment":
 
-		cmd := exec.Command("../controllers/spawn-machine.sh", containerName, containerID)
+		cmd := exec.Command("../controllers/spawn-machine.sh", containerName)
 		//cmd.Dir = dir
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
@@ -112,12 +112,18 @@ func contract(w http.ResponseWriter, r *http.Request) {
 
 		if err != nil || stderr.String() != "" {
 			w.WriteHeader(401)
+			log.Fatalln(stderr.String())
 			io.WriteString(w, stderr.String())
 			return
 		}
+		outToStr := string(out)
+		split := strings.Split(outToStr, ":")
+		containerDockerId := split[0]
+		podNetwork := strings.TrimSpace(split[1])
 		fmt.Println("kubectl DONE")
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
-		io.WriteString(w, strings.TrimSpace(string(out)))
+		json.NewEncoder(w).Encode(map[string]string{"containerDockerId": containerDockerId, "pod": podNetwork})
 	default:
 		w.WriteHeader(401)
 		io.WriteString(w, "invalid command")

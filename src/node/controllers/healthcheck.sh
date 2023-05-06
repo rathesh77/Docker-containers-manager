@@ -1,8 +1,8 @@
 #!/bin/bash
 
-id=$1
+docker_id=$1
 
-status=$(docker inspect -f '{{.State.Status}}' $id)
+status=$(docker inspect -f '{{.State.Status}}' $docker_id)
 if [ "$status" = "" ]
 then
     echo "no such container in this node" >&2
@@ -10,7 +10,7 @@ then
 else
     if [ "$status" = "false" ]
     then
-        echo "container $id went down"
+        echo "container $docker_id went down"
         exit -1
     fi
 

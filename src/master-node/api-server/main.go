@@ -29,6 +29,11 @@ type node struct {
 	mask       int
 }
 
+type MachinePod struct {
+	ContainerDockerId string
+	Pod               string
+}
+
 func main() {
 	fmt.Print("starting http server on port 3000")
 
@@ -83,11 +88,10 @@ func contract(w http.ResponseWriter, r *http.Request) {
 	command := split[0]
 	args := strings.Join(split[1:], " ")
 	switch command {
-	case "start-container":
+	case "init-deployment":
 
-		containerName := split[1]
 		postBody, _ := json.Marshal(map[string]string{
-			"contract": "start-container",
+			"contract": command,
 			"args":     args,
 		})
 		bytesBuffer := bytes.NewBuffer(postBody)
@@ -110,7 +114,19 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		}
 		sb := string(body)
 		log.Print(sb)
-		cmd := exec.Command("sh", "./etcd/machine/create-machine.sh", node.id, sb, containerName)
+
+		var machinePod MachinePod
+
+		err = json.Unmarshal(body, &machinePod)
+		if err != nil {
+			w.WriteHeader(401)
+			io.WriteString(w, err.Error())
+			return
+		}
+		containerDockerId := machinePod.ContainerDockerId
+		pod := machinePod.Pod
+
+		cmd := exec.Command("sh", "./etcd/machine/create-machine.sh", node.id, containerDockerId, pod)
 		cmd.Dir = "../"
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
