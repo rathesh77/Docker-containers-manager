@@ -12,16 +12,9 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+
+	structs "github.com/rathesh77/Docker-containers-manager/src/structs"
 )
-
-type Command struct {
-	Contract string `json:"contract"`
-	Args     string `json: "args"`
-}
-
-type Machine struct {
-	DockerId string `json:"id"`
-}
 
 func main() {
 	http.HandleFunc("/contract", contract)
@@ -48,7 +41,7 @@ func healthcheck(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, err.Error())
 		return
 	}
-	var line Machine
+	var line structs.Machine
 
 	err = json.Unmarshal(body, &line)
 	if err != nil {
@@ -88,7 +81,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, err.Error())
 		return
 	}
-	var line Command
+	var line structs.Command
 
 	err = json.Unmarshal(body, &line)
 	if err != nil {

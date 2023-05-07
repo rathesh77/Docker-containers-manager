@@ -15,24 +15,12 @@ import (
 	"strings"
 
 	_ "github.com/mattn/go-sqlite3"
+	structs "github.com/rathesh77/Docker-containers-manager/src/structs"
 )
 
 const file string = "../db"
 
 var db *sql.DB
-
-type node struct {
-	id         string
-	name       string
-	cluster_id string
-	network    string
-	mask       int
-}
-
-type MachinePod struct {
-	ContainerDockerId string
-	Pod               string
-}
 
 func main() {
 	fmt.Print("starting http server on port 3000")
@@ -92,9 +80,9 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	node := node{}
+	node := structs.Node{}
 	rows.Next()
-	err = rows.Scan(&node.id, &node.name, &node.cluster_id, &node.network, &node.mask)
+	err = rows.Scan(&node.Id, &node.Name, &node.Cluster_id, &node.Network, &node.Mask)
 	if err != nil {
 		w.WriteHeader(401)
 		io.WriteString(w, "error scanning node row")
@@ -113,7 +101,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 			"args":     args,
 		})
 		bytesBuffer := bytes.NewBuffer(postBody)
-		resp, err := http.Post("http://"+node.network+":3001/contract", "application/json", bytesBuffer)
+		resp, err := http.Post("http://"+node.Network+":3001/contract", "application/json", bytesBuffer)
 		log.Print(resp.StatusCode)
 		defer resp.Body.Close()
 
@@ -133,7 +121,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		sb := string(body)
 		log.Print(sb)
 
-		var machinePod MachinePod
+		var machinePod structs.MachinePod
 
 		err = json.Unmarshal(body, &machinePod)
 		if err != nil {
@@ -144,7 +132,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		containerDockerId := machinePod.ContainerDockerId
 		pod := machinePod.Pod
 
-		cmd := exec.Command("sh", "./etcd/machine/create-machine.sh", node.id, containerDockerId, pod)
+		cmd := exec.Command("sh", "./etcd/machine/create-machine.sh", node.Id, containerDockerId, pod)
 		cmd.Dir = "../"
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
