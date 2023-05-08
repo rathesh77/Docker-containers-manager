@@ -66,7 +66,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 				COUNT(*) as cnt,
 				node.id as node_id
 			FROM
-				node INNER JOIN pod ON pod.node_id = node.id
+				node LEFT JOIN pod ON pod.node_id = node.id
 			GROUP BY node.id
 			ORDER BY cnt DESC LIMIT 1),
 			node
