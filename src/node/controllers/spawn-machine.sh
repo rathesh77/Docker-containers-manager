@@ -2,33 +2,17 @@
 
 id="$1-$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')"
 
+image=$2
+
+#$args="$3"
 #container_id=$(docker run -td --name $name alpine:3.14)
 
 pod_network="net-$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')"
 
 docker network create $pod_network
 
-container_id=$(docker run \
-    --network "$pod_network" \
-    -td \
-    --log-driver \
-    json-file \
-    --log-opt max-file=10 \
-    --log-opt max-size=2m \
-    -v /etc/localtime:/etc/localtime:ro \
-    -v ./config:/root/.stash \
-    -v ./data:/data \
-    -v ./metadata:/metadata \
-    -v ./cache:/cache \
-    -v ./blobs:/blobs \
-    -v ./generated:/generated \
-    --name $id \
-    -e STASH_STASH=/data/ \
-    -e STASH_GENERATED=/generated/ \
-    -e STASH_METADATA=/metadata/ \
-    -e STASH_CACHE=/cache/ \
-    -e STASH_PORT=9999 \
-    stashapp/stash:latest)
+
+container_id=$(docker run --network "$pod_network" -td --name "$id" $3 "$image")
 
 
 status="$(docker container inspect -f '{{.State.Running}}' $id)"

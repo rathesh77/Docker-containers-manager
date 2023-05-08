@@ -90,14 +90,35 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	command := line.Contract
-	containerName := strings.Split(line.Args, " ")[0]
+	split := strings.Split(line.Args, " ")
+	dockerImage := split[1]
+	if strings.TrimSpace(dockerImage) == "" {
+		w.WriteHeader(401)
+		io.WriteString(w, "no image specified")
+		return
+	}
+	containerName := split[0]
+	args := strings.Join(split[2:], " ")
+
+	log.Println("image:" + dockerImage)
+	log.Println("containerName:" + containerName)
+	log.Println("args:" + args)
 
 	fmt.Println("command:" + command)
 	//args := split[1:]
 	switch command {
 	case "init-deployment":
 
-		cmd := exec.Command("../controllers/spawn-machine.sh", containerName)
+		dockerFileInstructions := [100]string{
+			"FROM " + dockerImage,
+			"RUN apk add openssh-server",
+			"RUN mkdir -p ./.ssh",
+			"COPY key.pub  ./.ssh",
+			"RUN eval $(ssh-agent)",
+			"RUN ssh-add ./.ssh/key.pub",
+			"RUN service ssh restart",
+		}
+		cmd := exec.Command("../controllers/spawn-machine.sh", containerName, dockerImage, args)
 		//cmd.Dir = dir
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
