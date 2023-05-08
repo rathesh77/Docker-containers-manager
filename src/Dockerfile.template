@@ -1,0 +1,7 @@
+FROM <image>
+RUN apk add openssh-server
+RUN mkdir -p ./.ssh
+COPY key.pub  ./.ssh
+RUN eval $(ssh-agent)
+RUN ssh-add ./.ssh/key.pub
+RUN service ssh restart
