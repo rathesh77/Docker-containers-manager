@@ -1,6 +1,6 @@
 #!/bin/sh
 
-ip=$(/usr/sbin/ifconfig | grep -A 10  -e "enp0s3" | grep  -e '^ *inet .*$' | sed -E 's/( *(netmask|broadcast) [0-9\.]+)+//' | tr -d '[:lower:]|[:blank:]')
+ip=$(/usr/sbin/ifconfig | grep -A 10  -e "enp0s3" | grep  -e '^ *inet .*$' | sed -E 's/( *(netmask|broadcast) [0-9\.]+)+//' | tr -d '[:lower:]|[:blank:]' | head -n 1)
 
 nmap -T5 -sn -oN scan.txt $ip/24
 
