@@ -4,7 +4,9 @@ ip=$(/usr/sbin/ifconfig | grep -A 10  -e "enp0s3" | grep  -e '^ *inet .*$' | sed
 
 nmap -T5 -sn -oN scan.txt $ip/24
 
-/usr/sbin/ifconfig | grep -A 10  -e "enp0s3" | grep  -e '^ *inet .*$' | sed -E 's/( *(netmask|inet) [0-9\.]+)+//' | tr -d '[:lower:]|[:blank:]'
+default_interface=$(ip route | grep '^default' | awk '/default/ {print $5}')
+
+/usr/sbin/ifconfig | grep -A 10  -e "$default_interface" | grep  -e '^ *inet .*$' | sed -E 's/( *(netmask|inet) [0-9\.]+)+//' | tr -d '[:lower:]|[:blank:]'
 
 cat scan.txt | grep 'for' | tr -d 'Nmap scan report for ' | while IFS= read -r addr ; do
     echo "$addr"
