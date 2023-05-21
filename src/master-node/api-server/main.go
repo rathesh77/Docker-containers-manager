@@ -140,9 +140,9 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		log.Println("init service")
 
 		args1 := strings.Split(args, " ")
-		serviceName := string(args1[0])
-		podLabel := string(args1[1])
-		port := string(args1[2])
+		serviceName := args1[0]
+		podLabel := args1[1]
+		port := args1[2]
 		nodes := map[string]([]string){}
 		//ipAddr := string(args[2])
 		log.Println(podLabel)
@@ -155,7 +155,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 			pod.name as pod_name
 		FROM
 			node inner join pod on pod.node_id = node.id
-			AND pod.name LIKE 'test2-%'
+			AND pod.name LIKE 'test-%'
 	`, podLabel)
 
 		if err != nil {
@@ -202,6 +202,8 @@ func contract(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 		rows.Close()
+		w.WriteHeader(200)
+
 		io.WriteString(w, "done")
 	default:
 		w.WriteHeader(401)

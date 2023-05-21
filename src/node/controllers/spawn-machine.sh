@@ -12,7 +12,7 @@ pod_network="$1-$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')"
 docker network create $pod_network
 
 
-container_id=$(docker run --network "$pod_network" -td --name "$id" $3 "$image")
+container_id=$(docker run --network "$pod_network" -td --name "$id" $3 -p 8082:8080 "$image")
 
 
 status="$(docker container inspect -f '{{.State.Running}}' $id)"

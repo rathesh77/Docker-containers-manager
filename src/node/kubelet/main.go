@@ -18,9 +18,9 @@ import (
 
 type Service struct {
 	Pods        []string `json:"pods"`
-	ServiceName string   `json: "serviceName"`
-	PodLabel    string   `json: "podLabel"`
-	Port        string   `json: "port"`
+	ServiceName string   `json:"serviceName"`
+	PodLabel    string   `json:"podLabel"`
+	Port        string   `json:"port"`
 }
 
 func main() {
@@ -167,25 +167,33 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		log.Println(service.Pods)
 		log.Println(service.Port)
 		log.Println(service.ServiceName)
-		io.WriteString(w, "done")
-		return
+
 		if err != nil {
 			w.WriteHeader(401)
 			io.WriteString(w, err.Error())
 			return
 		}
+		log.Println("en cours")
+		pods := ""
 
-		cmd := exec.Command("../controllers/create-virtual-interface.sh", "176.168.2.1", "255.255.255.0", "25", service.PodLabel, service.Port)
+		for _, s := range service.Pods {
+			if strings.TrimSpace(s) != "" {
+				pods += " " + strings.TrimSpace(s)
+			}
+		}
+
+		cmd := exec.Command("../controllers/create-virtual-interface.sh", "177.12.0.1", "255.255.255.0", "24", service.PodLabel, service.Port, service.ServiceName, strings.TrimSpace(pods))
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 
-		out, err := cmd.Output()
-		if err != nil || stderr.String() != "" {
+		out, _ := cmd.Output()
+		if strings.TrimSpace(stderr.String()) != "" {
 			w.WriteHeader(401)
-			log.Fatalln(stderr.String())
+			fmt.Println(stderr.String())
 			io.WriteString(w, stderr.String())
 			return
 		}
+
 		w.WriteHeader(200)
 		w.Write(out)
 	default:
