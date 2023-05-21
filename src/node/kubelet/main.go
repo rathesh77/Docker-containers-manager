@@ -16,9 +16,17 @@ import (
 	structs "github.com/rathesh77/Docker-containers-manager/src/structs"
 )
 
+type Service struct {
+	Pods        []string `json:"pods"`
+	ServiceName string   `json: "serviceName"`
+	PodLabel    string   `json: "podLabel"`
+	Port        string   `json: "port"`
+}
+
 func main() {
 	http.HandleFunc("/contract", contract)
 	http.HandleFunc("/healthcheck", healthcheck)
+	http.HandleFunc("/reverse-proxy-test", reverseProxyTest)
 
 	err := http.ListenAndServe(":3001", nil)
 
@@ -29,6 +37,11 @@ func main() {
 		os.Exit(-1)
 	}
 
+}
+
+func reverseProxyTest(w http.ResponseWriter, r *http.Request) {
+	io.WriteString(w, "hello world")
+	fmt.Println(r.Header)
 }
 
 func healthcheck(w http.ResponseWriter, r *http.Request) {
@@ -91,25 +104,11 @@ func contract(w http.ResponseWriter, r *http.Request) {
 	}
 	command := line.Contract
 	split := strings.Split(line.Args, " ")
-	dockerImage := split[1]
-	if strings.TrimSpace(dockerImage) == "" {
-		w.WriteHeader(401)
-		io.WriteString(w, "no image specified")
-		return
-	}
-	containerName := split[0]
-	args := strings.Join(split[2:], " ")
 
-	log.Println("image:" + dockerImage)
-	log.Println("containerName:" + containerName)
-	log.Println("args:" + args)
-
-	fmt.Println("command:" + command)
-	//args := split[1:]
 	switch command {
 	case "init-deployment":
 
-		dockerFileInstructions := [100]string{
+		/*dockerFileInstructions := [100]string{
 			"FROM " + dockerImage,
 			"RUN apk add openssh-server",
 			"RUN mkdir -p ./.ssh",
@@ -117,9 +116,25 @@ func contract(w http.ResponseWriter, r *http.Request) {
 			"RUN eval $(ssh-agent)",
 			"RUN ssh-add ./.ssh/key.pub",
 			"RUN service ssh restart",
+		}*/
+
+		containerName := split[0]
+		dockerImage := split[1]
+		args := strings.Join(split[2:], " ")
+
+		if strings.TrimSpace(dockerImage) == "" {
+			w.WriteHeader(401)
+			io.WriteString(w, "no image specified")
+			return
 		}
+
+		log.Println("image:" + dockerImage)
+		log.Println("containerName:" + containerName)
+		log.Println("args:" + args)
+
+		fmt.Println("command:" + command)
+
 		cmd := exec.Command("../controllers/spawn-machine.sh", containerName, dockerImage, args)
-		//cmd.Dir = dir
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 
@@ -142,6 +157,37 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(200)
 		json.NewEncoder(w).Encode(map[string]string{"containerDockerId": containerDockerId, "pod": podNetwork})
+
+	case "init-service":
+
+		var service Service
+
+		err = json.Unmarshal(body, &service)
+		log.Println(service.PodLabel)
+		log.Println(service.Pods)
+		log.Println(service.Port)
+		log.Println(service.ServiceName)
+		io.WriteString(w, "done")
+		return
+		if err != nil {
+			w.WriteHeader(401)
+			io.WriteString(w, err.Error())
+			return
+		}
+
+		cmd := exec.Command("../controllers/create-virtual-interface.sh", "176.168.2.1", "255.255.255.0", "25", service.PodLabel, service.Port)
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+
+		out, err := cmd.Output()
+		if err != nil || stderr.String() != "" {
+			w.WriteHeader(401)
+			log.Fatalln(stderr.String())
+			io.WriteString(w, stderr.String())
+			return
+		}
+		w.WriteHeader(200)
+		w.Write(out)
 	default:
 		w.WriteHeader(401)
 		io.WriteString(w, "invalid command")

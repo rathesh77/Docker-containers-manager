@@ -7,7 +7,7 @@ image=$2
 #$args="$3"
 #container_id=$(docker run -td --name $name alpine:3.14)
 
-pod_network="net-$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')"
+pod_network="$1-$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')"
 
 docker network create $pod_network
 

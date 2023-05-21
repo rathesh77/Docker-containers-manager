@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -16,6 +15,7 @@ import (
 
 	_ "github.com/mattn/go-sqlite3"
 	structs "github.com/rathesh77/Docker-containers-manager/src/structs"
+	Requester "github.com/rathesh77/Docker-containers-manager/src/utils/api"
 )
 
 const file string = "../db"
@@ -100,30 +100,17 @@ func contract(w http.ResponseWriter, r *http.Request) {
 			"contract": command,
 			"args":     args,
 		})
-		bytesBuffer := bytes.NewBuffer(postBody)
-		resp, err := http.Post("http://"+node.Network+":3001/contract", "application/json", bytesBuffer)
-		log.Print(resp.StatusCode)
-		defer resp.Body.Close()
+		Response := Requester.PostRequest("http://"+node.Network+":3001/contract", postBody)
 
-		if err != nil || resp.StatusCode != 200 {
+		if Response.StatusCode != 200 {
 			w.WriteHeader(401)
-			io.WriteString(w, "couldnt create container")
-			return
-		}
-		body, err := ioutil.ReadAll(resp.Body)
+			json.NewEncoder(w).Encode(Response)
 
-		if err != nil {
-			log.Fatalln(err)
-			w.WriteHeader(401)
-			io.WriteString(w, err.Error())
-			return
 		}
-		sb := string(body)
-		log.Print(sb)
 
 		var machinePod structs.MachinePod
 
-		err = json.Unmarshal(body, &machinePod)
+		err = json.Unmarshal(Response.Message, &machinePod)
 		if err != nil {
 			w.WriteHeader(401)
 			io.WriteString(w, err.Error())
@@ -137,7 +124,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 
-		out, err := cmd.Output()
+		_, err := cmd.Output()
 
 		if err != nil {
 			w.WriteHeader(500)
@@ -146,8 +133,76 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		}
 
 		w.WriteHeader(200)
-		io.WriteString(w, sb+"\n"+string(out))
+		io.WriteString(w, string(Response.Message))
 		return
+	case "init-service":
+
+		log.Println("init service")
+
+		args1 := strings.Split(args, " ")
+		serviceName := string(args1[0])
+		podLabel := string(args1[1])
+		port := string(args1[2])
+		nodes := map[string]([]string){}
+		//ipAddr := string(args[2])
+		log.Println(podLabel)
+		log.Println(args)
+
+		rows, err := db.Query(`
+		SELECT
+			node.id as id,
+			node.network as network,
+			pod.name as pod_name
+		FROM
+			node inner join pod on pod.node_id = node.id
+			AND pod.name LIKE 'test2-%'
+	`, podLabel)
+
+		if err != nil {
+			w.WriteHeader(401)
+			io.WriteString(w, "error selecting node")
+
+			return
+		}
+
+		for rows.Next() {
+			log.Println("row")
+			obj := make([]string, 3)
+			err = rows.Scan(&obj[0], &obj[1], &obj[2])
+			//pod := ""
+			if err != nil {
+				w.WriteHeader(401)
+				io.WriteString(w, err.Error())
+				return
+			}
+			if nodes[obj[1]] == nil {
+				nodes[obj[1]] = make([]string, 10)
+
+			}
+			nodes[obj[1]] = append(nodes[obj[1]], obj[2])
+
+		}
+		fmt.Println(nodes)
+
+		for ip, pods := range nodes {
+			postBody, _ := json.Marshal(map[string]any{
+				"contract":    command,
+				"pods":        pods,
+				"serviceName": serviceName,
+				"podLabel":    podLabel,
+				"port":        port,
+			})
+
+			Response := Requester.PostRequest("http://"+ip+":3001/contract", postBody)
+			if Response.StatusCode != 200 {
+				//w.WriteHeader(401)
+				//json.NewEncoder(w).Encode(Response)
+				log.Println("failed to init service for " + ip)
+
+			}
+		}
+		rows.Close()
+		io.WriteString(w, "done")
 	default:
 		w.WriteHeader(401)
 		io.WriteString(w, "invalid command")
