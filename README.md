@@ -19,4 +19,6 @@ any linux distro
 - Create pods (a unit containing one or more containers to be runned)
 - node scanning over the local network
 - Support yaml files for creating deployments
+- implement service
+- implement ingress
 - implement load balancing
