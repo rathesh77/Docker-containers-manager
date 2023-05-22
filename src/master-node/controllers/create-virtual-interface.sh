@@ -10,23 +10,19 @@ gateway=$4
 service_port=$5
 service=$6
 
-sudo /usr/sbin/ifconfig $default_interface:1 down
-
-sudo /usr/sbin/ifconfig $default_interface:1 $ipaddr
 
 server_ips=""
 
 for pod in $7; do
-    ip=$(docker network inspect -f '{{range .IPAM.Config}}{{.Gateway}}{{end}}' "$pod")
-    server_ips+="server $ip:$service_port;"
+    server_ips+="server $pod:$service_port;"
 done
 
 
-mkdir -p /etc/nginx/locations/node/$service
+mkdir -p /etc/nginx/locations/$service
 
-touch /etc/nginx/locations/node/$service/default.conf
+touch /etc/nginx/locations/$service/default.conf
 
-echo "location /$service {
+echo "location / {
     include proxy_params;
 
     proxy_pass http://$service/;
@@ -36,14 +32,14 @@ echo "location /$service {
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto \$scheme;
 
-}" > /etc/nginx/locations/node/$service/default.conf
+}" > /etc/nginx/locations/$service/default.conf
 
-mkdir -p /etc/nginx/upstreams/node/$service
-touch /etc/nginx/upstreams/node/$service/default.conf
+mkdir -p /etc/nginx/upstreams/$service
+touch /etc/nginx/upstreams/$service/default.conf
 
 echo "upstream $service {
    $server_ips
-}" > /etc/nginx/upstreams/node/$service/default.conf
+}" > /etc/nginx/upstreams/$service/default.conf
 
 sudo systemctl restart nginx
 

@@ -201,9 +201,26 @@ func contract(w http.ResponseWriter, r *http.Request) {
 
 			}
 		}
+
+		ips := ""
+		for k, _ := range nodes {
+			if strings.TrimSpace(k) != "" {
+				ips += " " + strings.TrimSpace(k)
+			}
+		}
+		cmd := exec.Command("../controllers/create-virtual-interface.sh", "177.12.0.1", "255.255.255.0", "24", podLabel, port, serviceName, strings.TrimSpace(ips))
+		var stderr bytes.Buffer
+		cmd.Stderr = &stderr
+		cmd.Output()
+		if strings.TrimSpace(stderr.String()) != "" {
+			w.WriteHeader(401)
+			fmt.Println(stderr.String())
+			io.WriteString(w, stderr.String())
+			return
+		}
+
 		rows.Close()
 		w.WriteHeader(200)
-
 		io.WriteString(w, "done")
 	default:
 		w.WriteHeader(401)
