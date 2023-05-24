@@ -29,7 +29,9 @@ echo "
 include /etc/nginx/upstreams/node/$service/default.conf;
 server {
     #listen 80;
-    listen $ipaddr:$service_port;
+    #listen $ipaddr:$service_port;
+    listen :$service_port;
+    listen [::]:$service_port;
 
     #server_name $service-service.org
     include /etc/nginx/locations/node/$service/default.conf;
@@ -40,7 +42,7 @@ mkdir -p /etc/nginx/locations/node/$service
 
 touch /etc/nginx/locations/node/$service/default.conf
 
-echo "location / {
+echo "location /$service/ {
     include proxy_params;
 
     proxy_pass http://$service/;
