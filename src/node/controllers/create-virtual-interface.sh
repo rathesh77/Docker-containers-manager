@@ -10,9 +10,13 @@ gateway=$4
 service_port=$5
 service=$6
 
-sudo /usr/sbin/ifconfig $default_interface:1 down
+#sudo /usr/sbin/ifconfig $default_interface:1 down
 
-sudo /usr/sbin/ifconfig $default_interface:1 $ipaddr
+#sudo /usr/sbin/ifconfig $default_interface:1 $ipaddr
+
+mkdir -p /etc/nginx/servers/
+
+touch /etc/nginx/servers/$service.conf
 
 server_ips=""
 
@@ -21,12 +25,22 @@ for pod in $7; do
     server_ips+="server $ip:$service_port;"
 done
 
+echo "
+include /etc/nginx/upstreams/node/$service/default.conf;
+server {
+    #listen 80;
+    listen $ipaddr:$service_port;
+
+    #server_name $service-service.org
+    include /etc/nginx/locations/node/$service/default.conf;
+
+}" > /etc/nginx/servers/$service.conf
 
 mkdir -p /etc/nginx/locations/node/$service
 
 touch /etc/nginx/locations/node/$service/default.conf
 
-echo "location /$service {
+echo "location / {
     include proxy_params;
 
     proxy_pass http://$service/;

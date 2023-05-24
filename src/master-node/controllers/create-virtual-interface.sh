@@ -22,7 +22,7 @@ mkdir -p /etc/nginx/locations/$service
 
 touch /etc/nginx/locations/$service/default.conf
 
-echo "location / {
+echo "location /$service/ {
     include proxy_params;
 
     proxy_pass http://$service/;
