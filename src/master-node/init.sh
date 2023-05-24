@@ -9,6 +9,7 @@ else
     echo "cluster already created"
 fi
 
+sudo bash ./controllers/discover-network.sh
 
 cd ./api-server
 go run . &

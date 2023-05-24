@@ -7,6 +7,12 @@ nmap -T5 -sn -oN scan.txt $ip/24
 /usr/sbin/ifconfig | grep -A 10  -e "enp0s3" | grep  -e '^ *inet .*$' | sed -E 's/( *(netmask|inet) [0-9\.]+)+//' | tr -d '[:lower:]|[:blank:]'
 
 cat scan.txt | grep 'for' | tr -d 'Nmap scan report for ' | while IFS= read -r addr ; do
+    self=$(ip a | grep "$addr")
+    if [ "$self" != "" ] 
+    then
+        sudo bash ./spawner/delete-node.sh $addr
+        continue
+    fi
     echo "$addr"
 
     response=$(curl -sSf -m 5 "http://$addr:3001/healthcheck" 2>&1 | grep '401')
@@ -16,6 +22,8 @@ cat scan.txt | grep 'for' | tr -d 'Nmap scan report for ' | while IFS= read -r a
         sudo bash ./spawner/spawn-node.sh $addr
     else
         echo "$addr: no heartbeat"
+        sudo bash ./spawner/delete-node.sh $addr
+
     fi
 done
 
