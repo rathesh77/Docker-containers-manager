@@ -21,10 +21,11 @@ touch /etc/nginx/servers/$service.conf
 server_ips=""
 
 for pod in $7; do
-    ip=$(docker network inspect -f '{{range .IPAM.Config}}{{.IPAddress}}{{end}}' "$pod")
+    ip=$(docker network inspect -f '{{range .Containers}}{{.IPv4Address}}{{end}}' "$pod")
     server_ips+="server $ip:$service_port;"
 done
 
+server_ips=$(echo $server_ips | sed 's/\/[0-9]\{2\}//g')
 echo "
 #include /etc/nginx/upstreams/node/$service/default.conf;
 server {
