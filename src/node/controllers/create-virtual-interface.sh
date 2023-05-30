@@ -22,6 +22,10 @@ server_ips=""
 
 for pod in $7; do
     ip=$(docker network inspect -f '{{range .Containers}}{{.IPv4Address}}{{end}}' "$pod")
+    if [ "$ip" = "" ]
+    then
+        continue
+    fi
     server_ips+="server $ip:$service_port;"
 done
 
