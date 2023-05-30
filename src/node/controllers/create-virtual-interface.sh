@@ -21,7 +21,7 @@ touch /etc/nginx/servers/$service.conf
 server_ips=""
 
 for pod in $7; do
-    ip=$(docker network inspect -f '{{range .IPAM.Config}}{{.Gateway}}{{end}}' "$pod")
+    ip=$(docker network inspect -f '{{range .IPAM.Config}}{{.IPAddress}}{{end}}' "$pod")
     server_ips+="server $ip:$service_port;"
 done
 

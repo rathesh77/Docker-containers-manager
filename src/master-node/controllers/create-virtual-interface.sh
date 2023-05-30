@@ -25,7 +25,7 @@ touch /etc/nginx/locations/$service/default.conf
 echo "location /$service/ {
     include proxy_params;
 
-    proxy_pass http://$service/;
+    proxy_pass http://$service;
 
     #proxy_set_header Host \$http_host;
     proxy_set_header X-Real-IP \$remote_addr;
