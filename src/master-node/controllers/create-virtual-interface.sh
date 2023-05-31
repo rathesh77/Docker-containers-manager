@@ -28,7 +28,7 @@ echo "
 server {
     listen 80;
 
-    server_name $ipaddr;
+    server_name www.$service.fr $service.fr;
 
 
 location / {
