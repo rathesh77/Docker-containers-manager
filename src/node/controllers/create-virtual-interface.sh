@@ -39,7 +39,7 @@ server {
     #listen $service_port;
     #listen [::]:$service_port;
 
-    server_name www.$service.fr
+    server_name www.$service.fr;
     include /etc/nginx/locations/node/$service/default.conf;
 
 }" > /etc/nginx/servers/$service.conf
@@ -53,7 +53,7 @@ echo "location / {
 
     proxy_pass http://$service/;
 
-    #proxy_set_header Host \$http_host;
+    proxy_set_header Host \$http_host;
     proxy_set_header X-Real-IP \$remote_addr;
     proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
     proxy_set_header X-Forwarded-Proto \$scheme;
