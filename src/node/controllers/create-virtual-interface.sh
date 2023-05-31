@@ -33,12 +33,13 @@ server_ips=$(echo $server_ips | sed 's/\/[0-9]\{2\}//g')
 echo "
 #include /etc/nginx/upstreams/node/$service/default.conf;
 server {
-    #listen 80;
+    listen 80;
+    listen [::]:80;
     #listen $ipaddr:$service_port;
-    listen $service_port;
-    listen [::]:$service_port;
+    #listen $service_port;
+    #listen [::]:$service_port;
 
-    #server_name $service-service.org
+    server_name www.$service.fr
     include /etc/nginx/locations/node/$service/default.conf;
 
 }" > /etc/nginx/servers/$service.conf
@@ -47,7 +48,7 @@ mkdir -p /etc/nginx/locations/node/$service
 
 touch /etc/nginx/locations/node/$service/default.conf
 
-echo "location /$service/ {
+echo "location / {
     #include proxy_params;
 
     proxy_pass http://$service/;
