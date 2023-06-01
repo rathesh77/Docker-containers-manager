@@ -155,8 +155,8 @@ func contract(w http.ResponseWriter, r *http.Request) {
 			pod.name as pod_name
 		FROM
 			node inner join pod on pod.node_id = node.id
-			AND pod.name LIKE 'test-%'
-	`, podLabel)
+			AND pod.name LIKE ?
+	`, podLabel+"-%")
 
 		if err != nil {
 			w.WriteHeader(401)
