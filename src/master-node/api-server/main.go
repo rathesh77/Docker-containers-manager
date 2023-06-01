@@ -150,7 +150,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 
 		log.Println("init service")
 		serviceName := strings.Trim(r.PostFormValue("name"), " ")
-		podSelector := strings.Trim(r.PostFormValue("docker-image"), " ")
+		podSelector := strings.Trim(r.PostFormValue("pod-selector"), " ")
 		port := strings.Trim(r.PostFormValue("port"), " ")
 
 		nodes := map[string]([]string){}
