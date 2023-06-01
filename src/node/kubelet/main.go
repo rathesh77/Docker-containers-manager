@@ -163,7 +163,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 			}
 		}
 
-		cmd := exec.Command("../controllers/create-virtual-interface.sh", "177.12.0.1", "255.255.255.0", "24", service.PodLabel, service.Port, service.ServiceName, strings.TrimSpace(pods))
+		cmd := exec.Command("../controllers/create-virtual-interface.sh", "177.12.0.1", "255.255.255.0", "24", command.PodSelector, command.Port, command.Name, strings.TrimSpace(pods))
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 
