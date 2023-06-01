@@ -94,33 +94,22 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		io.WriteString(w, err.Error())
 		return
 	}
-	var line structs.Command
+	var command structs.Command
 
-	err = json.Unmarshal(body, &line)
+	err = json.Unmarshal(body, &command)
 	if err != nil {
 		w.WriteHeader(401)
 		io.WriteString(w, err.Error())
 		return
 	}
-	command := line.Contract
-	split := strings.Split(line.Args, " ")
+	contract := command.Contract
 
-	switch command {
+	switch contract {
 	case "init-deployment":
 
-		/*dockerFileInstructions := [100]string{
-			"FROM " + dockerImage,
-			"RUN apk add openssh-server",
-			"RUN mkdir -p ./.ssh",
-			"COPY key.pub  ./.ssh",
-			"RUN eval $(ssh-agent)",
-			"RUN ssh-add ./.ssh/key.pub",
-			"RUN service ssh restart",
-		}*/
-
-		containerName := split[0]
-		dockerImage := split[1]
-		args := strings.Join(split[2:], " ")
+		containerName := command.PodLabel
+		dockerImage := command.DockerImage
+		args := command.Args
 
 		if strings.TrimSpace(dockerImage) == "" {
 			w.WriteHeader(401)
@@ -132,7 +121,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		log.Println("containerName:" + containerName)
 		log.Println("args:" + args)
 
-		fmt.Println("command:" + command)
+		fmt.Println("contract:" + contract)
 
 		cmd := exec.Command("../controllers/spawn-machine.sh", containerName, dockerImage, args)
 		var stderr bytes.Buffer
@@ -160,23 +149,15 @@ func contract(w http.ResponseWriter, r *http.Request) {
 
 	case "init-service":
 
-		var service Service
+		log.Println(command.PodSelector)
+		log.Println(command.Pods)
+		log.Println(command.Port)
+		log.Println(command.Name)
 
-		err = json.Unmarshal(body, &service)
-		log.Println(service.PodLabel)
-		log.Println(service.Pods)
-		log.Println(service.Port)
-		log.Println(service.ServiceName)
-
-		if err != nil {
-			w.WriteHeader(401)
-			io.WriteString(w, err.Error())
-			return
-		}
 		log.Println("en cours")
 		pods := ""
 
-		for _, s := range service.Pods {
+		for _, s := range command.Pods {
 			if strings.TrimSpace(s) != "" {
 				pods += " " + strings.TrimSpace(s)
 			}
@@ -198,6 +179,6 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		w.Write(out)
 	default:
 		w.WriteHeader(401)
-		io.WriteString(w, "invalid command")
+		io.WriteString(w, "invalid command:"+contract)
 	}
 }

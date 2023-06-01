@@ -47,8 +47,8 @@ func main() {
 
 func contract(w http.ResponseWriter, r *http.Request) {
 
-	line := strings.Trim(r.PostFormValue("contract"), " ")
-	if line == "" {
+	contract := strings.Trim(r.PostFormValue("contract"), " ")
+	if contract == "" {
 		w.WriteHeader(401)
 		io.WriteString(w, "error")
 		return
@@ -90,15 +90,26 @@ func contract(w http.ResponseWriter, r *http.Request) {
 	}
 	rows.Close()
 
-	split := strings.Split(line, " ")
-	command := split[0]
-	args := strings.Join(split[1:], " ")
+	command := contract
+
 	switch command {
 	case "init-deployment":
-
+		podLabel := strings.Trim(r.PostFormValue("pod-label"), " ")
+		dockerImage := strings.Trim(r.PostFormValue("docker-image"), " ")
+		if podLabel == "" {
+			w.WriteHeader(401)
+			io.WriteString(w, "pod label not found")
+			return
+		}
+		if dockerImage == "" {
+			w.WriteHeader(401)
+			io.WriteString(w, "docker image not found")
+			return
+		}
 		postBody, _ := json.Marshal(map[string]string{
-			"contract": command,
-			"args":     args,
+			"contract":     command,
+			"pod-label":    podLabel,
+			"docker-image": dockerImage,
 		})
 		Response := Requester.PostRequest("http://"+node.Network+":3001/contract", postBody)
 
@@ -138,15 +149,13 @@ func contract(w http.ResponseWriter, r *http.Request) {
 	case "init-service":
 
 		log.Println("init service")
+		serviceName := strings.Trim(r.PostFormValue("name"), " ")
+		podSelector := strings.Trim(r.PostFormValue("docker-image"), " ")
+		port := strings.Trim(r.PostFormValue("port"), " ")
 
-		args1 := strings.Split(args, " ")
-		serviceName := args1[0]
-		podLabel := args1[1]
-		port := args1[2]
 		nodes := map[string]([]string){}
 		//ipAddr := string(args[2])
-		log.Println(podLabel)
-		log.Println(args)
+		log.Println(podSelector)
 
 		rows, err := db.Query(`
 		SELECT
@@ -156,7 +165,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 		FROM
 			node inner join pod on pod.node_id = node.id
 			AND pod.name LIKE ?
-	`, podLabel+"-%")
+	`, podSelector+"-%")
 
 		if err != nil {
 			w.WriteHeader(401)
@@ -186,11 +195,11 @@ func contract(w http.ResponseWriter, r *http.Request) {
 
 		for ip, pods := range nodes {
 			postBody, _ := json.Marshal(map[string]any{
-				"contract":    command,
-				"pods":        pods,
-				"serviceName": serviceName,
-				"podLabel":    podLabel,
-				"port":        port,
+				"contract":     command,
+				"pods":         pods,
+				"name":         serviceName,
+				"pod-selector": podSelector,
+				"port":         port,
 			})
 
 			Response := Requester.PostRequest("http://"+ip+":3001/contract", postBody)
@@ -208,7 +217,7 @@ func contract(w http.ResponseWriter, r *http.Request) {
 				ips += " " + strings.TrimSpace(k)
 			}
 		}
-		cmd := exec.Command("../controllers/create-virtual-interface.sh", "177.12.0.1", "255.255.255.0", "24", podLabel, port, serviceName, strings.TrimSpace(ips))
+		cmd := exec.Command("../controllers/create-virtual-interface.sh", "177.12.0.1", "255.255.255.0", "24", podSelector, port, serviceName, strings.TrimSpace(ips))
 		var stderr bytes.Buffer
 		cmd.Stderr = &stderr
 		cmd.Output()
