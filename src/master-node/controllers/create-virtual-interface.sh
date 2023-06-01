@@ -14,7 +14,7 @@ service=$6
 server_ips=""
 
 for pod in $7; do
-    server_ips+="server $pod:$service_port;"
+    server_ips+="server $pod;"
 done
 
 
